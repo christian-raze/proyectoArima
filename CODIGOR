@@ -1,0 +1,108 @@
+### Cargando archivos
+exp_final <- read.delim("clipboard")
+##### Especificar periodo de la serie
+exp_final.ts <- ts(exp_final$Y, end = c(2022, 7), frequency = 12)
+start(exp_final.ts); end(exp_final.ts)
+
+#### Graficando la serie de tiempo
+library(ggplot2)
+library(ggfortify)
+autoplot(exp_final.ts,xlab= "Meses", 
+         ylab="Millones de Dolares", 
+         main="Exportaciones")
+
+#### PRUEBA DE ESTACIONARIEDAD
+#### H0: La serie no es estacionaria
+#### H1: La serie es estacionaria
+install.packages("tseries")
+install.packages("lmtest")
+install.packages("zoo")
+install.packages("forecast")
+library(ggplot2)
+library(zoo)
+library(tseries)
+library(lmtest)
+library(forecast)
+adf.test(exp_final.ts, alternative = "stationary")
+
+#### Si la serie no ES estacionaria
+#### Se debe Diferenciar de la serie
+#### Primera diferencia
+dif1.x = diff(exp_final.ts, differences = 1)
+#### Graficando la serie con la primera diferencia
+autoplot(dif1.x, main="Primera diferencia")
+
+#### PRUEBA DE ESTACIONARIEDAD PARA LA ST CON PRIMERA DIFERENCIA
+#### H0: La serie diferenciada no es estacionaria
+#### H1: La serie diferenciada es estacionaria
+library(tseries)
+adf.test(dif1.x, alternative = "stationary")
+
+#### MODELOS TENTATIVOS A PROBAR
+arima1f=Arima(exp_final.ts, order=c(1,1,0))
+arima2f=Arima(exp_final.ts, order=c(2,1,0))
+arima3f=Arima(exp_final.ts, order=c(0,1,1))
+arima4f=Arima(exp_final.ts, order=c(0,1,2))
+arima5f=Arima(exp_final.ts, order=c(1,1,1))
+arima6f=Arima(exp_final.ts, order=c(2,1,2))
+arima7f=Arima(exp_final.ts, order=c(2,1,1))
+arima8f=Arima(exp_final.ts, order=c(1,1,2))
+
+#### CÃ¡lculo del criterio de informaciÃ³n de Akaike (AIC)
+AIC(arima1f,arima2f,arima3f,arima4f,arima5f,arima6f,arima7f,arima8f)
+
+#### Estimacion y prueba de significaciÃ³n de los coeficientes
+#### de un modelo determinado
+library(lmtest)
+coeftest(arima6f)
+coeftest(arima7f)
+
+##### Diagnostico del mejor modelo
+#### Prueba de adecuaciÃ³n del modelo
+#### Test de Ljung-Box
+#### H0 : Modelo es adecuado 
+#### H1 : Modelo no es adecuado
+modelo<-arima6f
+library(ggfortify)
+Box.test(modelo$residuals, type="Ljung-Box") 
+
+##### Evaluacion de los residuos del modelo
+#### Prueba de normalidad de los residuos del modelo
+#### H0: Los errores del modelo se ajustan a una dist. normal
+#### H1: Los errores del modelo no se ajustan a una dist. normal
+
+##### Prueba Shapiro
+shapiro.test(modelo$residuals)
+##### Prueba Anderson-Darling
+library(nortest)
+ad.test(modelo$residuals)
+
+##### Diagnostico del otro mejor modelo
+#### Prueba de adecuaciÃ³n del modelo
+#### Test de Ljung-Box
+#### H0 : Modelo es adecuado 
+#### H1 : Modelo no es adecuado
+modelo<-arima7f
+library(ggfortify)
+Box.test(modelo$residuals, type="Ljung-Box") 
+
+##### Evaluacion de los residuos del modelo
+#### Prueba de normalidad de los residuos del modelo
+#### H0: Los errores del modelo se ajustan a una dist. normal
+#### H1: Los errores del modelo no se ajustan a una dist. normal
+
+##### Prueba Shapiro
+shapiro.test(modelo$residuals)
+##### Prueba Anderson-Darling
+library(nortest)
+ad.test(modelo$residuals)
+
+
+#### Pronosticos 
+(pronos<-forecast(modelo, h= 6, level = 0.95))
+#### GrÃ¡ficos de la serie y los pronosticos obtenidos
+autoplot(pronos, xlab= "Meses", ylab="Miles de DÃ³lares", 
+         main="Exportaciones")
+
+
+
